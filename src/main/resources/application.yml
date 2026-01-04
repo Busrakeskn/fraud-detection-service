@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: fraud-detection-service
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+  
+  # JPA yapılandırması (dev profile'da override edilir)
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Dolandırıcılık Tespit Yapılandırması
+fraud:
+  detection:
+    # Risk skoru eşikleri
+    thresholds:
+      approve-max: 0.4      # Risk < 0.4 → APPROVE
+      review-min: 0.4        # Risk 0.4-0.7 → REVIEW
+      review-max: 0.7
+      block-min: 0.7         # Risk > 0.7 → BLOCK
+    
+    # Kural ağırlıkları (toplam yaklaşık 1.0 olmalı)
+    rules:
+      time-of-day-weight: 0.30
+      amount-weight: 0.35
+      frequency-weight: 0.35
+      # Gün saati kuralı yapılandırması
+      time-of-day:
+        start-hour: 0        # Şüpheli saat başlangıcı (00:00)
+        end-hour: 5          # Şüpheli saat sonu (05:00)
+    
+    # Tutar eşikleri (para birimi cinsinden)
+    amount:
+      high-threshold: 10000.0
+      very-high-threshold: 50000.0
+    
+    # Sıklık kontrolü yapılandırması
+    frequency:
+      time-window-minutes: 15    # Zaman penceresi (dakika)
+      suspicious-count: 3        # Şüpheli kabul edilen işlem sayısı
+
+# OpenAPI / Swagger Yapılandırması
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.frauddetection: INFO
+    org.springframework: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{36}] - %msg%n"

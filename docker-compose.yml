@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fraud-detection-postgres
+    environment:
+      POSTGRES_DB: frauddb
+      POSTGRES_USER: frauduser
+      POSTGRES_PASSWORD: fraudpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frauduser -d frauddb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fraud-detection-network
+    restart: unless-stopped
+
+  fraud-detection-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraud-detection-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8080
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/frauddb
+      - SPRING_DATASOURCE_USERNAME=frauduser
+      - SPRING_DATASOURCE_PASSWORD=fraudpass
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # Fraud Detection Thresholds
+      - FRAUD_DETECTION_THRESHOLDS_APPROVE_MAX=0.4
+      - FRAUD_DETECTION_THRESHOLDS_REVIEW_MIN=0.4
+      - FRAUD_DETECTION_THRESHOLDS_REVIEW_MAX=0.7
+      - FRAUD_DETECTION_THRESHOLDS_BLOCK_MIN=0.7
+      # Rule Weights
+      - FRAUD_DETECTION_RULES_TIME_OF_DAY_WEIGHT=0.30
+      - FRAUD_DETECTION_RULES_AMOUNT_WEIGHT=0.35
+      - FRAUD_DETECTION_RULES_FREQUENCY_WEIGHT=0.35
+      # JVM Options
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/fraud/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - fraud-detection-network
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+networks:
+  fraud-detection-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
