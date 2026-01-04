@@ -445,6 +445,3 @@ private IMap<String, List<LocalDateTime>> transactionHistoryMap;
 
 Özel - Yalnızca dahili kullanım
 
-## Yazar
-
-Dolandırıcılık Tespit Ekibi
