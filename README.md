@@ -1,6 +1,9 @@
 # Gerçek Zamanlı Kredi Kartı Dolandırıcılık Tespit Servisi
 
-Bankacılık işlemlerinde gerçek zamanlı dolandırıcılık tespiti için üretim ortamına hazır REST API servisi. Bu servis, modüler kural tabanlı algoritmalar kullanarak kredi kartı işlemlerini analiz eder ve potansiyel dolandırıcılık faaliyetlerini tespit eder.
+Bu proje, gerçek dünya bankacılık senaryolarından ilham alınarak,
+gerçek zamanlı kredi kartı dolandırıcılık tespiti problemini öğrenme odaklı bir backend servisi olarak ele almak amacıyla geliştirilmiştir.
+
+Servis, modüler kural tabanlı (rule-based) bir yaklaşım kullanarak kredi kartı işlemlerini analiz eder ve potansiyel dolandırıcılık faaliyetleri için risk skorları üretir.
 
 ## Teknoloji Yığını
 
@@ -67,8 +70,9 @@ Her dolandırıcılık tespit kuralı bağımsız bir strateji olarak uygulanır
 3. **FrequencyRule** - Sıklık Kuralı
    - Aynı karttan 15 dakika içinde 3+ işlem = yüksek risk
    - Risk katkısı: %35 ağırlık
-   - In-memory çözüm (üretimde Redis/Hazelcast önerilir)
-
+   - In-memory çözüm (dağıtık sistemler için Redis/Hazelcast değerlendirilebilir)
+  
+     
 ### Risk Hesaplama
 
 **RiskScoreCalculator** servisi:
@@ -367,7 +371,7 @@ Spring otomatik olarak yeni kuralı bulacak ve kullanacaktır!
 
 ## Kod Kalitesi
 
-Bu proje şunları takip eder:
+Bu projede aşağıdaki prensipler gözetilmiştir:
 
 - ✅ **SOLID Prensipleri** - Her sınıf tek sorumluluğa sahip
 - ✅ **Strategy Pattern** - Modüler kural yapısı
@@ -388,7 +392,7 @@ Dockerfile iki aşamalı build kullanır:
 
 Bu yaklaşım:
 - Final image boyutunu küçültür (~200MB)
-- Build araçlarını production image'ından çıkarır
+- Build araçlarını runtime image'ından çıkarır
 - Güvenliği artırır (daha az attack surface)
 
 ### Güvenlik
@@ -443,5 +447,5 @@ private IMap<String, List<LocalDateTime>> transactionHistoryMap;
 
 ## Lisans
 
-Özel - Yalnızca dahili kullanım
+Eğitim ve portföy amaçlı geliştirilmiştir
 
