@@ -64,6 +64,7 @@ public class FraudDetectionService {
      * @param reviewMaxThreshold İnceleme için maksimum eşik
      * @param blockMinThreshold Engelleme için minimum eşik
      */
+    @Autowired
     public FraudDetectionService(
             RiskScoreCalculator riskScoreCalculator,
             MeterRegistry meterRegistry,
@@ -95,6 +96,21 @@ public class FraudDetectionService {
                 .register(meterRegistry);
         
         logger.info("FraudDetectionService başlatıldı - Eşikler: approve<{}, review={}-{}, block>{}",
+                approveMaxThreshold, reviewMinThreshold, reviewMaxThreshold, blockMinThreshold);
+    }
+
+    /**
+     * Testler veya manuel kullanım için persistence servisi olmadan kolayca
+     * instantiation yapabilmek adına ek bir constructor.
+     */
+    public FraudDetectionService(
+            RiskScoreCalculator riskScoreCalculator,
+            MeterRegistry meterRegistry,
+            BigDecimal approveMaxThreshold,
+            BigDecimal reviewMinThreshold,
+            BigDecimal reviewMaxThreshold,
+            BigDecimal blockMinThreshold) {
+        this(riskScoreCalculator, meterRegistry, null,
                 approveMaxThreshold, reviewMinThreshold, reviewMaxThreshold, blockMinThreshold);
     }
     

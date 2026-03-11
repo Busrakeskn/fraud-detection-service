@@ -1,4 +1,4 @@
-package com.frauddetection.domain.entity;
+package com.frauddetection.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;

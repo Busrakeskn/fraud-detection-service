@@ -1,6 +1,6 @@
 package com.frauddetection.repository;
 
-import com.frauddetection.domain.entity.TransactionEntity;
+import com.frauddetection.entity.TransactionEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -144,7 +144,7 @@ public class FraudDetectionController {
         logger.info("İşlem geçmişi isteği alındı - Account ID: {}, Page: {}, Size: {}", accountId, page, size);
         
         Pageable pageable = PageRequest.of(page, size);
-        Page<com.frauddetection.domain.entity.TransactionEntity> transactionPage = 
+        Page<com.frauddetection.entity.TransactionEntity> transactionPage = 
                 persistenceService.findByAccountId(accountId, pageable);
         
         TransactionHistoryResponse response = new TransactionHistoryResponse(

@@ -1,6 +1,6 @@
 package com.frauddetection.dto;
 
-import com.frauddetection.domain.entity.TransactionEntity;
+import com.frauddetection.entity.TransactionEntity;
 
 import java.util.List;
 

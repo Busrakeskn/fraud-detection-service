@@ -2,7 +2,7 @@ package com.frauddetection.service;
 
 import com.frauddetection.domain.FraudDecision;
 import com.frauddetection.domain.Transaction;
-import com.frauddetection.domain.entity.TransactionEntity;
+import com.frauddetection.entity.TransactionEntity;
 import com.frauddetection.dto.FraudResponse;
 import com.frauddetection.repository.TransactionRepository;
 import org.slf4j.Logger;

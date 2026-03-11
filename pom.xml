@@ -70,6 +70,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Embedded database for tests and local development -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
