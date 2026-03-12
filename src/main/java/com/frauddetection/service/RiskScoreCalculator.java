@@ -2,6 +2,7 @@ package com.frauddetection.service;
 
 import com.frauddetection.domain.Transaction;
 import com.frauddetection.service.rules.FraudRule;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,119 +11,93 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Risk skoru hesaplama servisi.
- * 
- * Tüm fraud kurallarını toplayarak nihai risk skorunu hesaplar.
- * Her kuralın ağırlığı yapılandırılabilir ve kurallar birbirinden
- * bağımsız olarak çalışır.
- * 
- * Risk skoru hesaplama mantığı:
- * 1. Her kuraldan risk skoru alınır (0.0 - 1.0)
- * 2. Her kuralın ağırlığı ile çarpılır
- * 3. Tüm ağırlıklı skorlar toplanır
- * 4. Sonuç 0.0 - 1.0 aralığına normalize edilir
- * 
- * @author Dolandırıcılık Tespit Ekibi
- */
 @Service
 public class RiskScoreCalculator {
-    
-    private static final Logger logger = LoggerFactory.getLogger(RiskScoreCalculator.class);
-    
-    // Tüm fraud kuralları - Spring tarafından otomatik enjekte edilir
-    private final List<FraudRule> fraudRules;
-    
-    // Kural ağırlıkları - config'den okunur
-    private final Map<String, BigDecimal> ruleWeights;
-    
-    // Risk skoru sınırları
-    private static final BigDecimal MIN_RISK_SCORE = BigDecimal.ZERO;
-    private static final BigDecimal MAX_RISK_SCORE = BigDecimal.ONE;
-    private static final int RISK_SCORE_SCALE = 4; // Ondalık basamak sayısı
-    
-    /**
-     * Constructor - tüm fraud kurallarını ve ağırlıkları enjekte eder.
-     * 
-     * @param fraudRules Tüm FraudRule implementasyonları (Spring tarafından otomatik toplanır)
-     * @param timeOfDayWeight Gün saati kuralı ağırlığı
-     * @param amountWeight Tutar kuralı ağırlığı
-     * @param frequencyWeight Sıklık kuralı ağırlığı
-     */
-    public RiskScoreCalculator(
-            List<FraudRule> fraudRules,
-            @Value("${fraud.detection.rules.time-of-day-weight:0.30}") BigDecimal timeOfDayWeight,
-            @Value("${fraud.detection.rules.amount-weight:0.35}") BigDecimal amountWeight,
-            @Value("${fraud.detection.rules.frequency-weight:0.35}") BigDecimal frequencyWeight) {
-        
-        this.fraudRules = fraudRules;
-        
-        // Kural ağırlıklarını map'e dönüştür
-        this.ruleWeights = Map.of(
-                "Gün Saati Kuralı", timeOfDayWeight,
-                "Tutar Kuralı", amountWeight,
-                "Sıklık Kuralı", frequencyWeight
-        );
-        
-        logger.info("RiskScoreCalculator başlatıldı - {} kural yüklendi", fraudRules.size());
-    }
-    
-    /**
-     * İşlem için nihai risk skorunu hesaplar.
-     * 
-     * @param transaction Analiz edilecek işlem
-     * @return 0.0 (düşük risk) ile 1.0 (yüksek risk) arasında normalize edilmiş risk skoru
-     */
-    public BigDecimal calculateFinalRiskScore(Transaction transaction) {
-        if (transaction == null) {
-            logger.warn("Geçersiz işlem - risk skoru 0.0 döndürülüyor");
-            return MIN_RISK_SCORE;
-        }
-        
-        BigDecimal totalWeightedScore = BigDecimal.ZERO;
-        
-        // Her kuraldan risk skorunu al ve ağırlığıyla çarp
-        for (FraudRule rule : fraudRules) {
-            double riskScore = rule.calculateRisk(transaction);
-            String ruleName = rule.getRuleName();
-            BigDecimal weight = ruleWeights.getOrDefault(ruleName, BigDecimal.ZERO);
-            
-            BigDecimal weightedScore = BigDecimal.valueOf(riskScore)
-                    .multiply(weight)
-                    .setScale(RISK_SCORE_SCALE, RoundingMode.HALF_UP);
-            
-            totalWeightedScore = totalWeightedScore.add(weightedScore);
-            
-            logger.debug("Kural: {} - Risk: {} - Ağırlık: {} - Ağırlıklı Skor: {}", 
-                       ruleName, riskScore, weight, weightedScore);
-        }
-        
-        // Risk skorunu 0.0 - 1.0 aralığına normalize et
-        BigDecimal normalizedScore = totalWeightedScore
-                .max(MIN_RISK_SCORE)
-                .min(MAX_RISK_SCORE)
-                .setScale(RISK_SCORE_SCALE, RoundingMode.HALF_UP);
-        
-        logger.debug("İşlem {} için nihai risk skoru: {}", transaction.getTransactionId(), normalizedScore);
-        
-        return normalizedScore;
-    }
-    
-    /**
-     * Tüm kurallardan risk açıklamalarını toplar.
-     * 
-     * @param transaction Analiz edilen işlem
-     * @return Risk açıklamalarının listesi
-     */
-    public List<String> getRiskReasons(Transaction transaction) {
-        return fraudRules.stream()
-                .map(rule -> rule.getRiskReason(transaction))
-                .filter(reason -> reason != null && !reason.isEmpty())
-                .collect(Collectors.toList());
-    }
+
+private static final Logger logger = LoggerFactory.getLogger(RiskScoreCalculator.class);
+
+private final List<FraudRule> fraudRules;
+
+private final BigDecimal timeWeight;
+private final BigDecimal amountWeight;
+private final BigDecimal frequencyWeight;
+
+private static final BigDecimal MIN_RISK_SCORE = BigDecimal.ZERO;
+private static final BigDecimal MAX_RISK_SCORE = BigDecimal.ONE;
+
+private static final int SCALE = 4;
+
+public RiskScoreCalculator(
+        List<FraudRule> fraudRules,
+        @Value("${fraud.detection.rules.time-of-day-weight:0.30}") BigDecimal timeWeight,
+        @Value("${fraud.detection.rules.amount-weight:0.35}") BigDecimal amountWeight,
+        @Value("${fraud.detection.rules.frequency-weight:0.35}") BigDecimal frequencyWeight) {
+
+    this.fraudRules = fraudRules;
+    this.timeWeight = timeWeight;
+    this.amountWeight = amountWeight;
+    this.frequencyWeight = frequencyWeight;
+
+    logger.info("RiskScoreCalculator başlatıldı - {} kural yüklendi", fraudRules.size());
 }
 
+public BigDecimal calculateFinalRiskScore(Transaction transaction) {
 
+    if (transaction == null) {
+        logger.warn("Geçersiz işlem - risk skoru 0.0 döndürülüyor");
+        return MIN_RISK_SCORE;
+    }
+
+    BigDecimal totalScore = BigDecimal.ZERO;
+
+    for (int i = 0; i < fraudRules.size(); i++) {
+        FraudRule rule = fraudRules.get(i);
+
+        double risk = rule.calculateRisk(transaction);
+
+        BigDecimal weight = BigDecimal.ZERO;
+
+        String ruleName = rule.getRuleName();
+        if (ruleName == null) {
+            logger.warn("Kural adı null - sıralamaya göre ağırlık seçilecek");
+            // Fallback: varsayılan olarak ekleme sırasına göre metrikleri seç
+            if (i == 0) {
+                weight = timeWeight;
+            } else if (i == 1) {
+                weight = amountWeight;
+            } else if (i == 2) {
+                weight = frequencyWeight;
+            }
+        } else if (ruleName.contains("Gün")) {
+            weight = timeWeight;
+        } else if (ruleName.contains("Tutar")) {
+            weight = amountWeight;
+        } else if (ruleName.contains("Sıklık")) {
+            weight = frequencyWeight;
+        }
+
+        BigDecimal weightedScore = BigDecimal.valueOf(risk)
+                .multiply(weight)
+                .setScale(SCALE, RoundingMode.HALF_UP);
+
+        totalScore = totalScore.add(weightedScore);
+    }
+
+    BigDecimal normalizedScore = totalScore
+            .max(MIN_RISK_SCORE)
+            .min(MAX_RISK_SCORE)
+            .setScale(SCALE, RoundingMode.HALF_UP);
+
+    return normalizedScore;
+}
+
+public List<String> getRiskReasons(Transaction transaction) {
+
+    return fraudRules.stream()
+            .map(rule -> rule.getRiskReason(transaction))
+            .filter(reason -> reason != null && !reason.isEmpty())
+            .collect(Collectors.toList());
+}
+}
