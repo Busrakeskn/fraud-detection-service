@@ -24,7 +24,6 @@ import static org.mockito.Mockito.*;
  * Given/When/Then yapısı kullanılarak test senaryoları yazılmıştır.
  * RiskScoreCalculator mock'lanmıştır, MeterRegistry gerçek instance kullanılır.
  * 
- * @author Dolandırıcılık Tespit Ekibi
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("FraudDetectionService Unit Tests")

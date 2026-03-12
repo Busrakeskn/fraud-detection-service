@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * 
  * Given/When/Then yapısı kullanılarak test senaryoları yazılmıştır.
  * 
- * @author Dolandırıcılık Tespit Ekibi
  */
 @DisplayName("AmountRule Unit Tests")
 class AmountRuleTest {

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
  * Tek Sorumluluk Prensibi'ni takip eder. API katmanı (DTO'lar) ve
  * iş katmanı (Domain modelleri) arasında temiz bir ayrım sağlar.
  * 
- * @author Dolandırıcılık Tespit Ekibi
  */
 @Component
 public class TransactionMapper {

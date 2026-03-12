@@ -61,7 +61,16 @@ public BigDecimal calculateFinalRiskScore(Transaction transaction) {
 
         String ruleName = rule.getRuleName();
         if (ruleName == null) {
-            logger.warn("Kural adı null - sıralamaya göre ağırlık seçilecek");
+            ruleName = "";
+        }
+
+        if (ruleName.contains("Gün")) {
+            weight = timeWeight;
+        } else if (ruleName.contains("Tutar")) {
+            weight = amountWeight;
+        } else if (ruleName.contains("Sıklık")) {
+            weight = frequencyWeight;
+        } else {
             // Fallback: varsayılan olarak ekleme sırasına göre metrikleri seç
             if (i == 0) {
                 weight = timeWeight;
@@ -70,12 +79,6 @@ public BigDecimal calculateFinalRiskScore(Transaction transaction) {
             } else if (i == 2) {
                 weight = frequencyWeight;
             }
-        } else if (ruleName.contains("Gün")) {
-            weight = timeWeight;
-        } else if (ruleName.contains("Tutar")) {
-            weight = amountWeight;
-        } else if (ruleName.contains("Sıklık")) {
-            weight = frequencyWeight;
         }
 
         BigDecimal weightedScore = BigDecimal.valueOf(risk)
